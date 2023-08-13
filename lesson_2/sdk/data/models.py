@@ -272,7 +272,7 @@ class Networks:
         coin_symbol='XDAI',
         explorer='https://gnosisscan.io/',
         api=API(
-            key=config.GOERLI_API, url='https://api.gnosisscan.io/',
+            key=config.GOERLI_API_KEY, url='https://api.gnosisscan.io/',
             docs='https://gnosisscan.io/apis'
         )
     )

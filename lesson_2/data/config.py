@@ -18,7 +18,7 @@ FILES_DIR = os.path.join(ROOT_DIR, 'files')
 ABIS_DIR = os.path.join(ROOT_DIR, 'data', 'abis')
 DEBUG_LOG = os.path.join(FILES_DIR, 'debug.log')
 
-#logger.add(f'{DEBUG_LOG}', format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}', level='DEBUG')
+logger.add(f'{DEBUG_LOG}', format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}', level='DEBUG')
 #logger.add(f"{DEBUG_LOG}", format='{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}', level='DEBUG')
 # logger.remove()
 
