@@ -6,18 +6,32 @@ from sdk.data.models import Networks
 from sdk.client import Client
 
 from private_data import private_key1, proxy #private_key2, private_key3,
+from loguru import logger
+
+
 
 
 async def main():
-    client = Client(private_key=private_key1, network=Networks.Arbitrum, proxy=proxy)
+    client = Client(network=Networks.Arbitrum, proxy=proxy)
     # print(await client.wallet.balance(token_address='0xaf88d065e77c8cc2239327c5edb3a432268e5831'))
     balance = await client.wallet.balance()
-    balance = await client.wallet.balance()
-    balance = await client.wallet.balance()
+
+    while balance == 0:
+        client = Client(network=Networks.Arbitrum, proxy=proxy)
+        balance = await client.wallet.balance()
+        logger.info(f'trying {client.account.address} has balance of {balance}')
+        await asyncio.sleep(3) # что бы прокси не устали
+
+    # print(await client.wallet.balance(token_address='0xaf88d065e77c8cc2239327c5edb3a432268e5831'))
+    # balance = await client.wallet.balance()
+    # balance = await client.wallet.balance()
     print(balance)
 
 
 
+if __name__ == '__main__':
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(main())
 
 
 
@@ -60,6 +74,3 @@ async def main():
     '''
 
 
-if __name__ == '__main__':
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(main())
