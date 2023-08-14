@@ -8,30 +8,34 @@ from sdk.client import Client
 from private_data import private_key1, proxy #private_key2, private_key3,
 from loguru import logger
 
-
-
-
-async def main():
+async def check_wallet():
     client = Client(network=Networks.Arbitrum, proxy=proxy)
-    # print(await client.wallet.balance(token_address='0xaf88d065e77c8cc2239327c5edb3a432268e5831'))
     balance = await client.wallet.balance()
 
     while balance == 0:
         client = Client(network=Networks.Arbitrum, proxy=proxy)
         balance = await client.wallet.balance()
         logger.info(f'trying {client.account.address} has balance of {balance}')
-        await asyncio.sleep(3) # что бы прокси не устали
+        await asyncio.sleep(1) # что бы прокси не устали
+    logger.info(f"FOUND BALANCE {client.account.address} has balance of {balance} and here is it's private key {client.account.key}")
 
-    # print(await client.wallet.balance(token_address='0xaf88d065e77c8cc2239327c5edb3a432268e5831'))
-    # balance = await client.wallet.balance()
-    # balance = await client.wallet.balance()
-    print(balance)
+
+    return balance
+
+
+
+
+async def main(count):
+    tasks = []
+    for i in range(count):
+        tasks.append(asyncio.create_task(check_wallet()))
+    await asyncio.wait(tasks)
 
 
 
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(main())
+    loop.run_until_complete(main(10))
 
 
 
