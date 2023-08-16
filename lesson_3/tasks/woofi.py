@@ -156,7 +156,7 @@ class WooFi(Base):
 
 
 
-    async def swap_eth_to_wbtc(self, amount: TokenAmount, slippage: float = 5):
+    async def swap_eth_to_wbtc(self, amount: TokenAmount, slippage: float = 1):
         failed_text = 'Failed swap ETH to WBTC via WooFi'
 
         contract = await self.client.contracts.get(contract_address=Contracts.ARBITRUM_WOOFI)
@@ -187,7 +187,8 @@ class WooFi(Base):
         tx = await self.client.transactions.sign_and_send(tx_params=tx_params)
         receipt = await tx.wait_for_receipt(client=self.client, timeout=200)
         if receipt:
-            return f'{amount.Ether} ETH was swaped to {min_to_amount.Ether} WBTC via WooFi: https://arbiscan.io/tx/{tx.hash.hex()}'
+            return (f'{amount.Ether} ETH was swaped to {min_to_amount.Ether} WBTC via WooFi: '
+                    f'https://arbiscan.io/tx/{tx.hash.hex()}')
 
         return f'{failed_text}!'
 
@@ -230,10 +231,66 @@ class WooFi(Base):
         tx = await self.client.transactions.sign_and_send(tx_params=tx_params)
         receipt = await tx.wait_for_receipt(client=self.client, timeout=200)
         if receipt:
-            return f'{amount.Ether} WBTC was swaped to {min_to_amount.Ether} ETH via WooFi: https://arbiscan.io/tx/{tx.hash.hex()}'
+            return (f'{amount.Ether} WBTC was swaped to {min_to_amount.Ether} ETH via WooFi: '
+                    f'https://arbiscan.io/tx/{tx.hash.hex()}')
 
         return f'{failed_text}!'
 
 
 
-    # swap_wbtc_to_eth  needs aprove
+
+    async def universsal_swap(self, amount: TokenAmount,
+                            slippage: float = 1,
+                            ticker1: str = "ETH",
+                            ticker2: str = "USDC",
+                            token1_Contract: Contracts = Contracts.ARBITRUM_ETH,
+                            token2_Contract: Contracts = Contracts.ARBITRUM_USDC,
+                            contract_address : Contracts = Contracts.ARBITRUM_WOOFI
+                    ):
+        print(type(amount))
+        ticker1 = ticker1.upper()
+        ticker2 = ticker2.upper()
+        failed_text = f'Failed swap {ticker1} to {ticker2} via WooFi'
+        contract = await self.client.contracts.get(contract_address)
+        from_token = token1_Contract
+        to_token = token2_Contract
+
+
+        if ticker1 != "ETH":
+            print("Starting aprove")
+            if not amount:
+                amount = await self.client.wallet.balance(token=from_token)
+            await self.approve_interface(token_address=from_token.address, spender=contract.address, amount=amount)
+            await asyncio.sleep(5)
+
+        if ticker2 == "WBTC":
+            ticker_parse = "BTC"
+        else:
+            ticker_parse = ticker2
+        eth_price = await self.get_token_price(token1=ticker1,token2=ticker_parse)
+
+        min_to_amount = TokenAmount(
+            amount=eth_price * float(amount.Ether) * (1 - slippage / 100),
+            decimals=await self.get_decimals(contract_address=to_token.address)
+        )
+
+        args = TxArgs(
+            fromToken=from_token.address,
+            toToken=to_token.address,
+            fromAmount=amount.Wei,
+            minToAmount=min_to_amount.Wei,
+            to=self.client.account.address,
+            rebateTo=self.client.account.address,
+        )
+
+        tx_params = TxParams(
+            to=contract.address,
+            data=contract.encodeABI('swap', args=args.tuple()),
+            value=amount.Wei
+        )
+        tx = await self.client.transactions.sign_and_send(tx_params=tx_params)
+        receipt = await tx.wait_for_receipt(client=self.client, timeout=200)
+        if receipt:
+            return f'{amount.Ether} {ticker1} was swaped to {min_to_amount.Ether} {ticker2} via WooFi: https://arbiscan.io/tx/{tx.hash.hex()}' #
+
+        return f'{failed_text}!'

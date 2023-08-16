@@ -67,17 +67,17 @@ async def main():
     # res = await woofi.swap_eth_to_usdc(amount=TokenAmount(amount=0.001))
     # res = await woofi.swap_usdc_to_eth()
 
-
-
-
     #Homework:
     # res = await woofi.swap_eth_to_usdt(amount=TokenAmount(amount=0.0005))     # tested - https://arbiscan.io/tx/0xf09e68ba61c8939be4b572642431bb2514e7bc18dbf260fd550a78283a19aa1e
     # res = await woofi.swap_usdt_to_eth()                                      # tested - https://arbiscan.io/tx/0x527dc11ed2b93a243cc387ae092c39ab7b9dbf50d50b6a41e26d8d48c62a53b6
     # res = await woofi.swap_eth_to_wbtc(amount=TokenAmount(amount=0.0005))     # tested - https://arbiscan.io/tx/0xb677fc9ebc2d6fb8c0c5ef525752f4f5d46ba42db3bea2de9fc8588a06f5a5c8
-    res = await woofi.swap_wbtc_to_eth()                                       # tested - https://arbiscan.io/tx/0x37159b6b12016da3e4580aeb3e72af7a61b05edea6d95e1862892df2010199cb
+    #res = await woofi.swap_wbtc_to_eth()                                       # tested - https://arbiscan.io/tx/0x37159b6b12016da3e4580aeb3e72af7a61b05edea6d95e1862892df2010199cb
 
-
-
+    # Homework2: Типо работает, но на самом деле так себе, сложности с получением цен на разные пары токенов, надо делать как то уменее.
+    res = await  woofi.universsal_swap(amount=TokenAmount(amount=0.0005), #https://arbiscan.io/tx/0xfd198544b7e6869aa449bede4a74eff5e3015253f0ee933e92c340cc3a906b63
+                                       ticker1="ETH",                     #https://arbiscan.io/tx/0xa1bdb44d5f39f6e4c2658e96a7375923d5d3182ae1446fd6eef94ba94c2c9587
+                                       ticker2="WBTC",
+                                       token2_Contract=Contracts.ARBITRUM_WBTC)
 
     if 'Failed' in res:
         logger.error(res)
