@@ -243,18 +243,27 @@ class WooFi(Base):
                             slippage: float = 1,
                             ticker1: str = "ETH",
                             ticker2: str = "USDC",
-                            token1_Contract: Contracts = Contracts.ARBITRUM_ETH,
-                            token2_Contract: Contracts = Contracts.ARBITRUM_USDC,
+                            token1_contract: Contracts = Contracts.ARBITRUM_ETH,
+                            token2_contract: Contracts = Contracts.ARBITRUM_USDC,
                             contract_address : Contracts = Contracts.ARBITRUM_WOOFI
                     ):
         print(type(amount))
-        ticker1 = ticker1.upper()
+
+        ticker1 = ticker1.upper() # token1_contract.ARBITRUM_USDC.symbol.call()
         ticker2 = ticker2.upper()
         failed_text = f'Failed swap {ticker1} to {ticker2} via WooFi'
         contract = await self.client.contracts.get(contract_address)
-        from_token = token1_Contract
-        to_token = token2_Contract
+        from_token = token1_contract
+        to_token = token2_contract
 
+        args = TxArgs(
+            fromToken=from_token.address,
+            toToken=to_token.address,
+            fromAmount=amount.Wei,
+            minToAmount=min_to_amount.Wei,
+            to=self.client.account.address,
+            rebateTo=self.client.account.address,
+        )
 
         if ticker1 != "ETH":
             print("Starting aprove")
@@ -262,6 +271,19 @@ class WooFi(Base):
                 amount = await self.client.wallet.balance(token=from_token)
             await self.approve_interface(token_address=from_token.address, spender=contract.address, amount=amount)
             await asyncio.sleep(5)
+
+            tx_params = TxParams(
+                to=contract.address,
+                data=contract.encodeABI('swap', args=args.tuple()),
+                value=amount.Wei
+            )
+        else:
+
+            tx_params = TxParams(
+                to=contract.address,
+                data=contract.encodeABI('swap', args=args.tuple()),
+                value=amount.Wei
+            )
 
         if ticker2 == "WBTC":
             ticker_parse = "BTC"
@@ -274,20 +296,9 @@ class WooFi(Base):
             decimals=await self.get_decimals(contract_address=to_token.address)
         )
 
-        args = TxArgs(
-            fromToken=from_token.address,
-            toToken=to_token.address,
-            fromAmount=amount.Wei,
-            minToAmount=min_to_amount.Wei,
-            to=self.client.account.address,
-            rebateTo=self.client.account.address,
-        )
 
-        tx_params = TxParams(
-            to=contract.address,
-            data=contract.encodeABI('swap', args=args.tuple()),
-            value=amount.Wei
-        )
+
+
         tx = await self.client.transactions.sign_and_send(tx_params=tx_params)
         receipt = await tx.wait_for_receipt(client=self.client, timeout=200)
         if receipt:

@@ -12,6 +12,9 @@ from tasks.woofi import WooFi
 from data.models import Contracts
 from data.config import ABIS_DIR
 from private_data import private_key1, proxy
+import sys
+
+logger.add(sys.stderr, format="[{message}")
 
 
 async def check_balance():

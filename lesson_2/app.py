@@ -5,23 +5,19 @@ from web3 import Web3
 from sdk.data.models import Networks
 from sdk.client import Client
 
-from private_data import private_key1, proxy #private_key2, private_key3,
+from private_data import private_key1 # proxy #private_key2, private_key3,
 from loguru import logger
 
 async def check_wallet():
-    client = Client(network=Networks.Arbitrum, proxy=proxy)
+    balance :int
+    client = Client(network=Networks.Arbitrum) #proxy=proxy)
     balance = await client.wallet.balance()
-
-    while balance == 0:
-        client = Client(network=Networks.Arbitrum, proxy=proxy)
-        balance = await client.wallet.balance()
-        logger.info(f'trying {client.account.address} has balance of {balance}')
-        await asyncio.sleep(1) # что бы прокси не устали
-    logger.info(f"FOUND BALANCE {client.account.address} has balance of {balance} and here is it's private key {client.account.key}")
-
-
+    logger.info(f'trying {client.account.address} has balance of {balance}')
+    if balance != 0:
+        logger.info(f"FOUND BALANCE {client.account.address} has balance of {balance} and here is it's private key {client.account.key}")
+        loop.stop()
+    await asyncio.sleep(1)  # что бы прокси не устали
     return balance
-
 
 
 
@@ -35,7 +31,7 @@ async def main(count):
 
 if __name__ == '__main__':
     loop = asyncio.new_event_loop()
-    loop.run_until_complete(main(10))
+    loop.run_until_complete(main(20))
 
 
 
