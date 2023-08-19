@@ -256,14 +256,7 @@ class WooFi(Base):
         from_token = token1_contract
         to_token = token2_contract
 
-        args = TxArgs(
-            fromToken=from_token.address,
-            toToken=to_token.address,
-            fromAmount=amount.Wei,
-            minToAmount=min_to_amount.Wei,
-            to=self.client.account.address,
-            rebateTo=self.client.account.address,
-        )
+
 
         if ticker1 != "ETH":
             print("Starting aprove")
@@ -272,18 +265,7 @@ class WooFi(Base):
             await self.approve_interface(token_address=from_token.address, spender=contract.address, amount=amount)
             await asyncio.sleep(5)
 
-            tx_params = TxParams(
-                to=contract.address,
-                data=contract.encodeABI('swap', args=args.tuple()),
-                value=amount.Wei
-            )
-        else:
 
-            tx_params = TxParams(
-                to=contract.address,
-                data=contract.encodeABI('swap', args=args.tuple()),
-                value=amount.Wei
-            )
 
         if ticker2 == "WBTC":
             ticker_parse = "BTC"
@@ -296,7 +278,27 @@ class WooFi(Base):
             decimals=await self.get_decimals(contract_address=to_token.address)
         )
 
+        args = TxArgs(
+            fromToken=from_token.address,
+            toToken=to_token.address,
+            fromAmount=amount.Wei,
+            minToAmount=min_to_amount.Wei,
+            to=self.client.account.address,
+            rebateTo=self.client.account.address,
+        )
 
+        if ticker1 != "ETH":
+            tx_params = TxParams(
+                to=contract.address,
+                data=contract.encodeABI('swap', args=args.tuple()),
+                value=amount.Wei
+            )
+        else:
+            tx_params = TxParams(
+                to=contract.address,
+                data=contract.encodeABI('swap', args=args.tuple()),
+                value=amount.Wei
+            )
 
 
         tx = await self.client.transactions.sign_and_send(tx_params=tx_params)
